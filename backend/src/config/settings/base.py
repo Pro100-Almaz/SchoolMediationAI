@@ -2,12 +2,12 @@ import logging
 import pathlib
 
 import decouple
-import pydantic
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR: pathlib.Path = pathlib.Path(__file__).parent.parent.parent.parent.parent.resolve()
 
 
-class BackendBaseSettings(pydantic.BaseSettings):
+class BackendBaseSettings(BaseSettings):
     TITLE: str = "DAPSQL FARN-Stack Template Application"
     VERSION: str = "0.1.0"
     TIMEZONE: str = "UTC"
@@ -70,10 +70,12 @@ class BackendBaseSettings(pydantic.BaseSettings):
     HASHING_SALT: str = decouple.config("HASHING_SALT", cast=str)  # type: ignore
     JWT_ALGORITHM: str = decouple.config("JWT_ALGORITHM", cast=str)  # type: ignore
 
-    class Config(pydantic.BaseConfig):
-        case_sensitive: bool = True
-        env_file: str = f"{str(ROOT_DIR)}/.env"
-        validate_assignment: bool = True
+    # Pydantic v2 / pydantic-settings config
+    model_config = SettingsConfigDict(
+        case_sensitive=True,
+        env_file=f"{str(ROOT_DIR)}/.env",
+        validate_assignment=True,
+    )
 
     @property
     def set_backend_app_attributes(self) -> dict[str, str | bool | None]:

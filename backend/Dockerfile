@@ -1,5 +1,5 @@
-# Pull official latest Python Docker image (Pulished with version 3.11.0)
-FROM --platform=linux/amd64 python:latest
+# Use a pinned Python version (project targets 3.11+; avoids incompatible "latest"/new majors)
+FROM --platform=linux/amd64 python:3.12-slim
 
 # Set the working directory
 WORKDIR /usr/backend
@@ -38,4 +38,6 @@ RUN chmod +x /usr/backend/entrypoint.sh
 ENTRYPOINT ["/usr/backend/entrypoint.sh" ]
 
 # Start up the backend server
-CMD uvicorn src.main:backend_app --reload --workers 4 --host 0.0.0.0 --port 8000
+# - `--reload-dir` ensures reload watches your source folder
+# - installing `watchfiles` makes reload reliable on Docker Desktop bind mounts
+CMD uvicorn src.main:backend_app --reload --reload-dir /usr/backend/src --host 0.0.0.0 --port 8000

@@ -20,10 +20,12 @@ python-dotenv
 python-decouple
 python-jose
 python-slugify
+pydantic-settings
 pytest
 pytest-asyncio
 pytest-cov
 pytest-xdist
-SQLAlchemy==2.0.0b3
+SQLAlchemy>=2.0,<3.0
 trio
 uvicorn
+watchfiles

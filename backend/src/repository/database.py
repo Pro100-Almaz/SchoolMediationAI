@@ -1,43 +1,49 @@
-import pydantic
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker as sqlalchemy_async_sessionmaker,
     AsyncEngine as SQLAlchemyAsyncEngine,
     AsyncSession as SQLAlchemyAsyncSession,
     create_async_engine as create_sqlalchemy_async_engine,
 )
-from sqlalchemy.pool import Pool as SQLAlchemyPool, QueuePool as SQLAlchemyQueuePool
+from sqlalchemy.engine import URL as SQLAlchemyURL
+from sqlalchemy.pool import Pool as SQLAlchemyPool
 
 from src.config.manager import settings
 
 
 class AsyncDatabase:
     def __init__(self):
-        self.postgres_uri: pydantic.PostgresDsn = pydantic.PostgresDsn(
-            url=f"{settings.DB_POSTGRES_SCHEMA}://{settings.DB_POSTGRES_USENRAME}:{settings.DB_POSTGRES_PASSWORD}@{settings.DB_POSTGRES_HOST}:{settings.DB_POSTGRES_PORT}/{settings.DB_POSTGRES_NAME}",
-            scheme=settings.DB_POSTGRES_SCHEMA,
+        # Use SQLAlchemy's URL builder to avoid Pydantic-v1 style DSN construction
+        # and to guarantee an asyncpg driver is used.
+        # IMPORTANT: do not cast URL to `str()` here.
+        # `str(SQLAlchemyURL(...))` intentionally renders the password as "***" for safety.
+        # If you pass that string to SQLAlchemy, it will literally try to login with password "***".
+        self.postgres_url: SQLAlchemyURL = SQLAlchemyURL.create(
+            drivername="postgresql+asyncpg",
+            username=settings.DB_POSTGRES_USERNAME,
+            password=settings.DB_POSTGRES_PASSWORD,
+            host=settings.DB_POSTGRES_HOST,
+            port=settings.DB_POSTGRES_PORT,
+            database=settings.DB_POSTGRES_NAME,
         )
+
+        print('*'*10)
+        print(settings.DB_POSTGRES_PASSWORD)
+        print('*'*10)
+
         self.async_engine: SQLAlchemyAsyncEngine = create_sqlalchemy_async_engine(
-            url=self.set_async_db_uri,
+            url=self.postgres_url,
             echo=settings.IS_DB_ECHO_LOG,
             pool_size=settings.DB_POOL_SIZE,
             max_overflow=settings.DB_POOL_OVERFLOW,
-            poolclass=SQLAlchemyQueuePool,
         )
-        self.async_session: SQLAlchemyAsyncSession = SQLAlchemyAsyncSession(bind=self.async_engine)
+        # Create sessions per-request (do NOT share a single AsyncSession globally).
+        self.async_sessionmaker: sqlalchemy_async_sessionmaker[SQLAlchemyAsyncSession] = (
+            sqlalchemy_async_sessionmaker(
+                bind=self.async_engine,
+                expire_on_commit=settings.IS_DB_EXPIRE_ON_COMMIT,
+            )
+        )
         self.pool: SQLAlchemyPool = self.async_engine.pool
-
-    @property
-    def set_async_db_uri(self) -> str | pydantic.PostgresDsn:
-        """
-        Set the synchronous database driver into asynchronous version by utilizing AsyncPG:
-
-            `postgresql://` => `postgresql+asyncpg://`
-        """
-        return (
-            self.postgres_uri.replace("postgresql://", "postgresql+asyncpg://")
-            if self.postgres_uri
-            else self.postgres_uri
-        )
 
 
 async_db: AsyncDatabase = AsyncDatabase()
