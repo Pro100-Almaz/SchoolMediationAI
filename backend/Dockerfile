@@ -1,17 +1,15 @@
 # Use a pinned Python version (project targets 3.11+; avoids incompatible "latest"/new majors)
-FROM --platform=linux/amd64 python:3.12-slim
+FROM --platform=linux/amd64 python:3.13-slim
 
 # Set the working directory
 WORKDIR /usr/backend
 
 # Set up Python behaviour
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV VIRTUAL_ENV=/opt/venv
-
-# Switch on virtual environment
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+# Tell Poetry to install into the system Python (no virtualenv needed inside Docker)
+ENV POETRY_VIRTUALENVS_CREATE=false
+ENV POETRY_NO_INTERACTION=1
 
 # Set the server port
 EXPOSE 8000
@@ -19,13 +17,17 @@ EXPOSE 8000
 # Install system dependencies
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-      netcat-openbsd gcc postgresql-client \
+      netcat-openbsd gcc postgresql-client curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-RUN pip install --upgrade pip
-COPY ./requirements.txt ./
-RUN pip3 install -r requirements.txt
+# Install Poetry
+RUN pip install --upgrade pip && pip install poetry
+
+# Copy only dependency files first (improves Docker layer caching)
+COPY pyproject.toml poetry.lock ./
+
+# Install only production dependencies
+RUN poetry install --only main
 
 # Copy all files
 COPY . .
@@ -35,7 +37,7 @@ COPY ./entrypoint.sh .
 RUN chmod +x /usr/backend/entrypoint.sh
 
 # Execute entrypoint.sh
-ENTRYPOINT ["/usr/backend/entrypoint.sh" ]
+ENTRYPOINT ["/usr/backend/entrypoint.sh"]
 
 # Start up the backend server
 # - `--reload-dir` ensures reload watches your source folder

@@ -1,29 +1,50 @@
-[project]
-name = "DAPSQL QWIK-Stack Application"
+[tool.poetry]
+name = "dopshy-backend"
 version = "0.0.1"
 description = "A comprehensive template to start a real-world quality project."
-authors = [
-    {name = "Aeternalis-Ingenium", email="aeternalisingenium@proton.me"},
-]
-classifiers = [
-    "Topic :: Software Development"
-]
+authors = ["Aeternalis-Ingenium <aeternalisingenium@proton.me>"]
+package-mode = false
 
-dynamic = ["dependencies"]
-#license = {file = "LICENSE.txt"}
-readme = "README.md"
-requires-python = ">=3.11"
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+alembic = "*"
+asgi-lifespan = "*"
+argon2-cffi = "*"
+asyncpg = "*"
+bcrypt = "*"
+colorama = "*"
+email-validator = "*"
+fastapi = "*"
+greenlet = "*"
+loguru = "*"
+passlib = "*"
+python-dotenv = "*"
+python-decouple = "*"
+python-jose = "*"
+python-slugify = "*"
+pydantic-settings = "*"
+SQLAlchemy = ">=2.0,<3.0"
+trio = "*"
+uvicorn = "*"
+watchfiles = "*"
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+mypy = "*"
+httpx = "*"
+pre-commit = "*"
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
 
-[project.urls]
-homepage = "https://github.com/Aeternalis-Ingenium/DAPSQL-FAQ-Stack-Template"
-documentation = "https://github.com/Aeternalis-Ingenium/DAPSQL-FAQ-Stack-Template"
-repository = "https://github.com/Aeternalis-Ingenium/DAPSQL-FAQ-Stack-Template"
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-color=true
+color = true
 exclude = '''
     /(
         \.git
@@ -86,7 +107,7 @@ error_summary = true
 exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
 ignore_missing_imports = true
 pretty = true
-python_version = "3.11"
+python_version = "3.13"
 strict_optional = true
 warn_no_return = true
 warn_return_any = false
