@@ -1,6 +1,6 @@
 # SchoolMediationAI
 
-FastAPI-based backend with PostgreSQL, SQLAlchemy, and JWT authentication.
+FastAPI based backend with PostgreSQL, SQLAlchemy, and JWT authentication.
 
 ---
 
