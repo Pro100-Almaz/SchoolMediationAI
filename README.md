@@ -1,4 +1,4 @@
-# SchoolMediationAI
+# Dopshy Backend
 
 FastAPI based backend with PostgreSQL, SQLAlchemy, and JWT authentication.
 
